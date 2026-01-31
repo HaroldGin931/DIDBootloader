@@ -1,0 +1,18 @@
+# CoreML Models
+*.mlpackage/
+*.mlmodel
+*.mlmodelc/
+
+# Python cache
+__pycache__/
+*.pyc
+scripts/*.onnx
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad/
+
+# macOS
+.DS_Store
