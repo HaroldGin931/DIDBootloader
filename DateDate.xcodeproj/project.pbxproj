@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F287C0E22F2A0DD0006BFB36 /* NFCPassportReader in Frameworks */ = {isa = PBXBuildFile; productRef = F287C0E12F2A0DD0006BFB36 /* NFCPassportReader */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		F287C0C42F2A0D5D006BFB36 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,9 +33,22 @@
 		F287C0CD2F2A0D5D006BFB36 /* DateDateUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DateDateUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F287C10F2F2A17D7006BFB36 /* Exceptions for "DateDate" folder in "DateDate" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F287C0B52F2A0D5B006BFB36 /* DateDate */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F287C0B82F2A0D5B006BFB36 /* DateDate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F287C10F2F2A17D7006BFB36 /* Exceptions for "DateDate" folder in "DateDate" target */,
+			);
 			path = DateDate;
 			sourceTree = "<group>";
 		};
@@ -52,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F287C0E22F2A0DD0006BFB36 /* NFCPassportReader in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +130,7 @@
 			);
 			name = DateDate;
 			packageProductDependencies = (
+				F287C0E12F2A0DD0006BFB36 /* NFCPassportReader */,
 			);
 			productName = DateDate;
 			productReference = F287C0B62F2A0D5B006BFB36 /* DateDate.app */;
@@ -195,6 +214,9 @@
 			);
 			mainGroup = F287C0AD2F2A0D5B006BFB36;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F287C0E02F2A0DD0006BFB36 /* XCRemoteSwiftPackageReference "NFCPassportReader" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F287C0B72F2A0D5B006BFB36 /* Products */;
 			projectDirPath = "";
@@ -395,11 +417,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = DateDate/DateDate.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UD3269PSCB;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DateDate/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -427,11 +451,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = DateDate/DateDate.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = UD3269PSCB;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DateDate/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -578,6 +604,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F287C0E02F2A0DD0006BFB36 /* XCRemoteSwiftPackageReference "NFCPassportReader" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AndyQ/NFCPassportReader.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F287C0E12F2A0DD0006BFB36 /* NFCPassportReader */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F287C0E02F2A0DD0006BFB36 /* XCRemoteSwiftPackageReference "NFCPassportReader" */;
+			productName = NFCPassportReader;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F287C0AE2F2A0D5B006BFB36 /* Project object */;
 }
