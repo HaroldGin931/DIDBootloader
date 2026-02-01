@@ -16,3 +16,6 @@ DerivedData/
 
 # macOS
 .DS_Store
+
+# test_data
+scripts/test_data

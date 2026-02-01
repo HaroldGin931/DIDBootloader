@@ -11,15 +11,26 @@ public class AppAttestService {
     private let dcAppAttestService = DCAppAttestService.shared
     private var keyId: String?
     
+    /// Key for storing attested keyId in UserDefaults
+    private let attestedKeyIdKey = "com.datedate.appAttest.keyId"
+    
     /// Challenge provider for getting challenges from different sources
     public var challengeProvider: ChallengeProvider = MockChallengeProvider()
     
     /// Callback for exporting attestation data for manual verification
     public var onAttestationExport: ((AttestationExportData) -> Void)?
     
-    private init() {}
+    private init() {
+        // Load previously attested keyId from storage
+        loadAttestedKeyId()
+    }
     
     // MARK: - Public API
+    
+    /// Check if device has been attested (has a valid keyId stored)
+    public var isAttested: Bool {
+        return keyId != nil
+    }
     
     /// Check if App Attest is supported on this device
     public var isSupported: Bool {
@@ -83,6 +94,9 @@ public class AppAttestService {
         
         // Save attestation for later export
         try saveAttestationToFile(exportData)
+        
+        // Persist the keyId for future use
+        saveAttestedKeyId(keyId)
         
         return attestation
     }
@@ -153,6 +167,9 @@ public class AppAttestService {
         onAttestationExport?(exportData)
         try saveAttestationToFile(exportData)
         
+        // Persist the keyId for future use
+        saveAttestedKeyId(keyId)
+        
         return result
     }
     
@@ -166,6 +183,29 @@ public class AppAttestService {
     /// Set a previously generated key ID (e.g., loaded from storage)
     public func setKeyId(_ keyId: String) {
         self.keyId = keyId
+        saveAttestedKeyId(keyId)
+    }
+    
+    /// Clear the stored attestation (for testing or re-attestation)
+    public func clearAttestation() {
+        keyId = nil
+        UserDefaults.standard.removeObject(forKey: attestedKeyIdKey)
+    }
+    
+    // MARK: - Persistence
+    
+    /// Load previously attested keyId from UserDefaults
+    private func loadAttestedKeyId() {
+        if let savedKeyId = UserDefaults.standard.string(forKey: attestedKeyIdKey) {
+            keyId = savedKeyId
+            print("[AppAttest] Loaded attested keyId from storage")
+        }
+    }
+    
+    /// Save attested keyId to UserDefaults
+    private func saveAttestedKeyId(_ keyId: String) {
+        UserDefaults.standard.set(keyId, forKey: attestedKeyIdKey)
+        print("[AppAttest] Saved attested keyId to storage")
     }
     
     // MARK: - Export Functions

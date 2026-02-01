@@ -37,23 +37,37 @@ class FaceCaptureViewController: UIViewController {
     var passportImage: UIImage?
     var onCapture: ((UIImage, FaceComparisonResult) -> Void)?
     
-    // 用于存储最新的帧和相似度
+    // Store latest frame and similarity
     private var latestFrame: UIImage?
     private var latestSimilarity: Float = 0
     private var latestResult: FaceComparisonResult?
     private var isProcessing = false
     
-    // 预先提取护照人脸特征
+    // Pre-extracted passport face features
     private var passportLandmarks: VNFaceLandmarks2D?
+    
+    // Time window for similarity tracking (3 seconds)
+    private let timeWindowDuration: TimeInterval = 3.0
+    private var similarityHistory: [(timestamp: Date, similarity: Float)] = []
+    private var comparisonStartTime: Date?
+    private var hasAutoDecided = false  // Prevent multiple auto-decisions
+    
+    // Thresholds
+    private let successThreshold: Float = 0.70  // 70% for success
+    private let failureThreshold: Float = 0.65  // 65% for failure
+    private let requiredRatio: Float = 0.6      // 60% of samples must meet threshold
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
         
-        // 预先提取护照照片的人脸特征
+        // Pre-extract passport face features
         Task {
             await extractPassportFaceLandmarks()
         }
+        
+        // Start comparison timer
+        comparisonStartTime = Date()
         
         setupCamera()
         setupUI()
@@ -252,15 +266,20 @@ class FaceCaptureViewController: UIViewController {
             
             self.latestSimilarity = similarity
             
-            // 更新相似度显示
+            // Track similarity in time window
+            if faceDetected {
+                self.trackSimilarity(similarity)
+            }
+            
+            // Update similarity display
             self.similarityLabel.text = String(format: "Similarity: %.1f%%", similarity * 100)
             self.similarityProgressView.progress = similarity
             
-            // 根据相似度更新颜色
+            // Update color based on similarity
             let color: UIColor
-            if similarity >= 0.7 {
+            if similarity >= self.successThreshold {
                 color = .green
-            } else if similarity >= 0.5 {
+            } else if similarity >= self.failureThreshold {
                 color = .yellow
             } else {
                 color = .red
@@ -270,19 +289,150 @@ class FaceCaptureViewController: UIViewController {
             self.similarityProgressView.progressTintColor = color
             self.faceGuideView.layer.borderColor = faceDetected ? color.cgColor : UIColor.white.cgColor
             
-            // 更新调试信息
-            self.debugLabel.text = debugInfo
+            // Update debug info with time window stats
+            let windowStats = self.getTimeWindowStats()
+            var fullDebugInfo = debugInfo
+            if let stats = windowStats {
+                fullDebugInfo += String(format: "\n\nWindow: %.1fs | Samples: %d", stats.elapsed, stats.count)
+                fullDebugInfo += String(format: "\nHigh(≥70%%): %d%% | Low(<65%%): %d%%", 
+                    Int(stats.highRatio * 100), Int(stats.lowRatio * 100))
+            }
+            self.debugLabel.text = fullDebugInfo
             
-            // 更新说明文字
+            // Update instruction text based on time window decision
             if !faceDetected {
                 self.instructionLabel.text = "No face detected"
                 self.instructionLabel.textColor = .red
-            } else if similarity >= 0.6 {
-                self.instructionLabel.text = "✓ Match successful! Tap to confirm"
-                self.instructionLabel.textColor = .green
             } else {
-                self.instructionLabel.text = "Adjust position and lighting"
-                self.instructionLabel.textColor = .yellow
+                self.updateInstructionBasedOnTimeWindow()
+            }
+        }
+    }
+    
+    // MARK: - Time Window Tracking
+    
+    private func trackSimilarity(_ similarity: Float) {
+        let now = Date()
+        
+        // Add new sample
+        similarityHistory.append((timestamp: now, similarity: similarity))
+        
+        // Remove samples outside time window
+        let cutoff = now.addingTimeInterval(-timeWindowDuration)
+        similarityHistory.removeAll { $0.timestamp < cutoff }
+        
+        // Check for auto-decision after time window is filled
+        checkTimeWindowDecision()
+    }
+    
+    private struct TimeWindowStats {
+        let count: Int
+        let elapsed: TimeInterval
+        let highRatio: Float  // Ratio of samples >= 70%
+        let lowRatio: Float   // Ratio of samples < 65%
+        let avgSimilarity: Float
+    }
+    
+    private func getTimeWindowStats() -> TimeWindowStats? {
+        guard let startTime = comparisonStartTime else { return nil }
+        
+        let elapsed = Date().timeIntervalSince(startTime)
+        let count = similarityHistory.count
+        
+        guard count > 0 else {
+            return TimeWindowStats(count: 0, elapsed: elapsed, highRatio: 0, lowRatio: 0, avgSimilarity: 0)
+        }
+        
+        let highCount = similarityHistory.filter { $0.similarity >= successThreshold }.count
+        let lowCount = similarityHistory.filter { $0.similarity < failureThreshold }.count
+        let avgSimilarity = similarityHistory.map { $0.similarity }.reduce(0, +) / Float(count)
+        
+        return TimeWindowStats(
+            count: count,
+            elapsed: elapsed,
+            highRatio: Float(highCount) / Float(count),
+            lowRatio: Float(lowCount) / Float(count),
+            avgSimilarity: avgSimilarity
+        )
+    }
+    
+    private func checkTimeWindowDecision() {
+        guard !hasAutoDecided else { return }
+        guard let startTime = comparisonStartTime else { return }
+        
+        let elapsed = Date().timeIntervalSince(startTime)
+        
+        // Only make decision after time window has passed
+        guard elapsed >= timeWindowDuration else { return }
+        guard similarityHistory.count >= 5 else { return }  // Need at least 5 samples
+        
+        guard let stats = getTimeWindowStats() else { return }
+        
+        // Decision logic:
+        // Success: >= 60% of samples are >= 70% similarity
+        // Failure: >= 60% of samples are < 65% similarity
+        
+        if stats.highRatio >= requiredRatio {
+            // Auto success
+            hasAutoDecided = true
+            autoCompleteWithResult(success: true, avgSimilarity: stats.avgSimilarity)
+        } else if stats.lowRatio >= requiredRatio {
+            // Auto failure
+            hasAutoDecided = true
+            autoCompleteWithResult(success: false, avgSimilarity: stats.avgSimilarity)
+        }
+    }
+    
+    private func autoCompleteWithResult(success: Bool, avgSimilarity: Float) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let frame = self.latestFrame else { return }
+            
+            let result = FaceComparisonResult(
+                isMatch: success,
+                confidence: avgSimilarity,
+                message: success ? 
+                    "Face matched! Avg confidence: \(String(format: "%.1f", avgSimilarity * 100))%" :
+                    "Face not matched. Avg confidence: \(String(format: "%.1f", avgSimilarity * 100))%"
+            )
+            
+            self.captureSession?.stopRunning()
+            self.onCapture?(frame, result)
+            self.dismiss(animated: true)
+        }
+    }
+    
+    private func updateInstructionBasedOnTimeWindow() {
+        guard let stats = getTimeWindowStats() else {
+            instructionLabel.text = "Analyzing..."
+            instructionLabel.textColor = .white
+            return
+        }
+        
+        let remainingTime = max(0, timeWindowDuration - stats.elapsed)
+        
+        if remainingTime > 0 {
+            // Still collecting data
+            if stats.highRatio >= 0.5 {
+                instructionLabel.text = String(format: "Looking good! %.1fs...", remainingTime)
+                instructionLabel.textColor = .green
+            } else if stats.lowRatio >= 0.5 {
+                instructionLabel.text = String(format: "Adjust position! %.1fs...", remainingTime)
+                instructionLabel.textColor = .yellow
+            } else {
+                instructionLabel.text = String(format: "Keep steady... %.1fs", remainingTime)
+                instructionLabel.textColor = .white
+            }
+        } else {
+            // Time window complete, waiting for decision or manual confirm
+            if stats.highRatio >= requiredRatio {
+                instructionLabel.text = "✓ Match successful!"
+                instructionLabel.textColor = .green
+            } else if stats.lowRatio >= requiredRatio {
+                instructionLabel.text = "✗ Match failed"
+                instructionLabel.textColor = .red
+            } else {
+                instructionLabel.text = "Inconclusive - Tap to confirm"
+                instructionLabel.textColor = .yellow
             }
         }
     }
