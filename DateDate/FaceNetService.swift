@@ -64,7 +64,7 @@ class FaceNetService {
             return FaceComparisonResult(
                 isMatch: false,
                 confidence: 0,
-                message: "无法提取人脸特征"
+                message: "Unable to extract face features"
             )
         }
         
@@ -76,8 +76,8 @@ class FaceNetService {
             isMatch: isMatch,
             confidence: similarity,
             message: isMatch ?
-                "人脸匹配成功！置信度: \(String(format: "%.1f", similarity * 100))%" :
-                "人脸不匹配，相似度: \(String(format: "%.1f", similarity * 100))%"
+                "Face matched! Confidence: \(String(format: "%.1f", similarity * 100))%" :
+                "Face not matched. Similarity: \(String(format: "%.1f", similarity * 100))%"
         )
     }
     

@@ -20,12 +20,12 @@ class FaceComparisonService {
         
         // 1. 检测并裁剪护照照片中的人脸
         guard let passportFace = await detectAndCropFace(from: passportImage) else {
-            return FaceComparisonResult(isMatch: false, confidence: 0, message: "无法在护照照片中检测到人脸")
+            return FaceComparisonResult(isMatch: false, confidence: 0, message: "Unable to detect face in passport photo")
         }
         
         // 2. 检测并裁剪拍摄照片中的人脸
         guard let capturedFace = await detectAndCropFace(from: capturedImage) else {
-            return FaceComparisonResult(isMatch: false, confidence: 0, message: "无法在拍摄的照片中检测到人脸")
+            return FaceComparisonResult(isMatch: false, confidence: 0, message: "Unable to detect face in captured photo")
         }
         
         // 3. 提取人脸特征并比较
@@ -36,8 +36,8 @@ class FaceComparisonService {
         let isMatch = similarity >= threshold
         
         let message = isMatch 
-            ? "人脸匹配成功！置信度: \(String(format: "%.1f", similarity * 100))%"
-            : "人脸不匹配。置信度: \(String(format: "%.1f", similarity * 100))%"
+            ? "Face matched! Confidence: \(String(format: "%.1f", similarity * 100))%"
+            : "Face not matched. Confidence: \(String(format: "%.1f", similarity * 100))%"
         
         return FaceComparisonResult(isMatch: isMatch, confidence: similarity, message: message)
     }

@@ -43,7 +43,7 @@ struct ContentView: View {
                                 if let image = passportImage {
                                     HStack {
                                         VStack {
-                                            Text("护照照片")
+                                            Text("Passport Photo")
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
                                             Image(uiImage: image)
@@ -55,7 +55,7 @@ struct ContentView: View {
                                         
                                         if let capturedImage = capturedFaceImage {
                                             VStack {
-                                                Text("拍摄照片")
+                                                Text("Captured Photo")
                                                     .font(.caption)
                                                     .foregroundColor(.secondary)
                                                 Image(uiImage: capturedImage)
@@ -83,10 +83,10 @@ struct ContentView: View {
                                     
                                     // 人脸验证按钮
                                     if isComparingFaces {
-                                        ProgressView("正在比对人脸...")
+                                        ProgressView("Comparing faces...")
                                     } else {
                                         Button(action: { showFaceCapture = true }) {
-                                            Label("验证人脸", systemImage: "faceid")
+                                            Label("Verify Face", systemImage: "faceid")
                                                 .font(.title3)
                                                 .frame(maxWidth: .infinity)
                                                 .padding()
@@ -151,6 +151,13 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("Passport NFC")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: AppAttestView()) {
+                        Image(systemName: "checkmark.shield")
+                    }
+                }
+            }
             .sheet(isPresented: $showScanner) {
                 MRZScannerView { mrzText in
                     print("MRZ Scanned: \(mrzText)")
@@ -191,7 +198,7 @@ struct ContentView: View {
     
     func compareFaces() {
         guard let passportImg = passportImage, let capturedImg = capturedFaceImage else {
-            scanError = "缺少照片"
+            scanError = "Missing photo"
             return
         }
         

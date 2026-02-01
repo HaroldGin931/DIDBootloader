@@ -94,7 +94,7 @@ class FaceCaptureViewController: UIViewController {
         
         guard let frontCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front),
               let input = try? AVCaptureDeviceInput(device: frontCamera) else {
-            showError("无法访问前置摄像头")
+            showError("Unable to access front camera")
             return
         }
         
@@ -149,7 +149,7 @@ class FaceCaptureViewController: UIViewController {
         // 相似度数值标签
         similarityLabel = UILabel()
         similarityLabel.translatesAutoresizingMaskIntoConstraints = false
-        similarityLabel.text = "相似度: ---%"
+        similarityLabel.text = "Similarity: ---%"
         similarityLabel.textColor = .white
         similarityLabel.font = .systemFont(ofSize: 32, weight: .bold)
         similarityLabel.textAlignment = .center
@@ -158,7 +158,7 @@ class FaceCaptureViewController: UIViewController {
         // 调试信息标签
         debugLabel = UILabel()
         debugLabel.translatesAutoresizingMaskIntoConstraints = false
-        debugLabel.text = "等待人脸检测..."
+        debugLabel.text = "Waiting for face detection..."
         debugLabel.textColor = .yellow
         debugLabel.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         debugLabel.textAlignment = .center
@@ -168,7 +168,7 @@ class FaceCaptureViewController: UIViewController {
         // 说明文字
         instructionLabel = UILabel()
         instructionLabel.translatesAutoresizingMaskIntoConstraints = false
-        instructionLabel.text = "请将脸部置于框内"
+        instructionLabel.text = "Place your face within the frame"
         instructionLabel.textColor = .white
         instructionLabel.font = .systemFont(ofSize: 18, weight: .medium)
         instructionLabel.textAlignment = .center
@@ -177,7 +177,7 @@ class FaceCaptureViewController: UIViewController {
         // 拍照按钮
         captureButton = UIButton(type: .system)
         captureButton.translatesAutoresizingMaskIntoConstraints = false
-        captureButton.setTitle("确认", for: .normal)
+        captureButton.setTitle("Confirm", for: .normal)
         captureButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .bold)
         captureButton.setTitleColor(.white, for: .normal)
         captureButton.backgroundColor = UIColor.systemGreen
@@ -188,7 +188,7 @@ class FaceCaptureViewController: UIViewController {
         // 取消按钮
         let cancelButton = UIButton(type: .system)
         cancelButton.translatesAutoresizingMaskIntoConstraints = false
-        cancelButton.setTitle("取消", for: .normal)
+        cancelButton.setTitle("Cancel", for: .normal)
         cancelButton.setTitleColor(.white, for: .normal)
         cancelButton.addTarget(self, action: #selector(cancelCapture), for: .touchUpInside)
         view.addSubview(cancelButton)
@@ -226,7 +226,7 @@ class FaceCaptureViewController: UIViewController {
     
     @objc private func confirmCapture() {
         guard let frame = latestFrame, let result = latestResult else {
-            showError("请等待人脸检测完成")
+            showError("Please wait for face detection to complete")
             return
         }
         
@@ -241,8 +241,8 @@ class FaceCaptureViewController: UIViewController {
     }
     
     private func showError(_ message: String) {
-        let alert = UIAlertController(title: "错误", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
     
@@ -253,7 +253,7 @@ class FaceCaptureViewController: UIViewController {
             self.latestSimilarity = similarity
             
             // 更新相似度显示
-            self.similarityLabel.text = String(format: "相似度: %.1f%%", similarity * 100)
+            self.similarityLabel.text = String(format: "Similarity: %.1f%%", similarity * 100)
             self.similarityProgressView.progress = similarity
             
             // 根据相似度更新颜色
@@ -275,13 +275,13 @@ class FaceCaptureViewController: UIViewController {
             
             // 更新说明文字
             if !faceDetected {
-                self.instructionLabel.text = "未检测到人脸"
+                self.instructionLabel.text = "No face detected"
                 self.instructionLabel.textColor = .red
             } else if similarity >= 0.6 {
-                self.instructionLabel.text = "✓ 匹配成功！点击确认"
+                self.instructionLabel.text = "✓ Match successful! Tap to confirm"
                 self.instructionLabel.textColor = .green
             } else {
-                self.instructionLabel.text = "请调整位置和光线"
+                self.instructionLabel.text = "Adjust position and lighting"
                 self.instructionLabel.textColor = .yellow
             }
         }
@@ -319,13 +319,13 @@ extension FaceCaptureViewController: AVCaptureVideoDataOutputSampleBufferDelegat
     
     private func processFrame(_ frame: UIImage) async {
         guard let passportLm = passportLandmarks else {
-            updateUI(similarity: 0, faceDetected: false, debugInfo: "护照特征未就绪")
+            updateUI(similarity: 0, faceDetected: false, debugInfo: "Passport features not ready")
             return
         }
         
         // 检测当前帧中的人脸特征
         guard let cgImage = frame.cgImage else {
-            updateUI(similarity: 0, faceDetected: false, debugInfo: "帧转换失败")
+            updateUI(similarity: 0, faceDetected: false, debugInfo: "Frame conversion failed")
             return
         }
         
@@ -350,7 +350,7 @@ extension FaceCaptureViewController: AVCaptureVideoDataOutputSampleBufferDelegat
         }
         
         guard let currentLm = frameLandmarks else {
-            updateUI(similarity: 0, faceDetected: false, debugInfo: "当前帧未检测到人脸")
+            updateUI(similarity: 0, faceDetected: false, debugInfo: "No face detected in current frame")
             return
         }
         
@@ -360,11 +360,11 @@ extension FaceCaptureViewController: AVCaptureVideoDataOutputSampleBufferDelegat
         // 构建调试信息 - 显示关键比例值
         let ratios1 = extractFaceRatios(passportLm)
         let ratios2 = extractFaceRatios(currentLm)
-        var debugInfo = "护照 vs 当前:\n"
+        var debugInfo = "Passport vs Current:\n"
         if ratios1.count >= 3 && ratios2.count >= 3 {
-            debugInfo += String(format: "眼距比: %.2f vs %.2f\n", ratios1[0], ratios2[0])
-            debugInfo += String(format: "鼻嘴比: %.2f vs %.2f\n", ratios1[1], ratios2[1])
-            debugInfo += String(format: "眼嘴比: %.2f vs %.2f", ratios1[2], ratios2[2])
+            debugInfo += String(format: "Eye distance: %.2f vs %.2f\n", ratios1[0], ratios2[0])
+            debugInfo += String(format: "Nose-mouth: %.2f vs %.2f\n", ratios1[1], ratios2[1])
+            debugInfo += String(format: "Eye-mouth: %.2f vs %.2f", ratios1[2], ratios2[2])
         }
         
         // 保存最新帧和结果
@@ -373,7 +373,7 @@ extension FaceCaptureViewController: AVCaptureVideoDataOutputSampleBufferDelegat
         latestResult = FaceComparisonResult(
             isMatch: isMatch,
             confidence: similarity,
-            message: isMatch ? "人脸匹配成功！置信度: \(String(format: "%.1f", similarity * 100))%" : "人脸不匹配"
+            message: isMatch ? "Face matched! Confidence: \(String(format: "%.1f", similarity * 100))%" : "Face not matched"
         )
         
         updateUI(similarity: similarity, faceDetected: true, debugInfo: debugInfo)
