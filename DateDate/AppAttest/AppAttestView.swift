@@ -68,6 +68,54 @@ struct AppAttestView: View {
                     .disabled(!viewModel.isSupported || viewModel.isLoading)
                 }
                 
+                // Sign & Send Test Section
+                if viewModel.keyId != nil && viewModel.lastResult != nil {
+                    Section("Sign & Send Message") {
+                        TextField("Message to sign", text: $viewModel.testMessage)
+                            .textFieldStyle(.roundedBorder)
+                        
+                        Button(action: {
+                            Task { await viewModel.signAndSendMessage() }
+                        }) {
+                            HStack {
+                                Image(systemName: "signature")
+                                Text("Sign Message")
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .disabled(viewModel.testMessage.isEmpty || viewModel.isLoading)
+                        
+                        if let assertionResult = viewModel.lastAssertionResult {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Assertion Generated")
+                                    .font(.headline)
+                                    .foregroundColor(.green)
+                                
+                                Text("Message: \(assertionResult.message)")
+                                    .font(.caption)
+                                
+                                Text("Assertion Size: \(assertionResult.assertion.count) bytes")
+                                    .font(.caption)
+                                
+                                Text("Timestamp: \(assertionResult.timestamp.formatted())")
+                                    .font(.caption)
+                                
+                                Button("Copy Assertion (Base64)") {
+                                    UIPasteboard.general.string = assertionResult.assertion.base64EncodedString()
+                                }
+                                .font(.caption)
+                                
+                                Button("Share Signed Request") {
+                                    viewModel.shareSignedRequest(assertionResult)
+                                }
+                                .font(.caption)
+                            }
+                            .foregroundColor(.secondary)
+                            .padding(.top, 8)
+                        }
+                    }
+                }
+                
                 // Export Section
                 Section("Export") {
                     Button("View Exported Attestations") {
@@ -237,6 +285,10 @@ class AppAttestViewModel: ObservableObject {
     @Published var lastResult: AttestationResult?
     @Published var lastAttestationData: AttestationExportData?
     
+    // Sign & Send
+    @Published var testMessage: String = "Hello, this is a test message!"
+    @Published var lastAssertionResult: AssertionResult?
+    
     private let service = AppAttestService.shared
     
     init() {
@@ -311,6 +363,80 @@ class AppAttestViewModel: ObservableObject {
            let rootVC = windowScene.windows.first?.rootViewController {
             rootVC.present(activityVC, animated: true)
         }
+    }
+    
+    // MARK: - Sign & Send Message
+    
+    func signAndSendMessage() async {
+        guard let keyId = keyId else {
+            errorMessage = "No key available. Please run attestation first."
+            return
+        }
+        
+        guard !testMessage.isEmpty else {
+            errorMessage = "Message cannot be empty"
+            return
+        }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let messageData = testMessage.data(using: .utf8)!
+            let assertion = try await service.generateAssertion(keyId: keyId, requestData: messageData)
+            
+            lastAssertionResult = AssertionResult(
+                keyId: keyId,
+                message: testMessage,
+                messageData: messageData,
+                assertion: assertion,
+                timestamp: Date()
+            )
+            
+            print("[AppAttest] Message signed successfully")
+            print("[AppAttest] Assertion size: \(assertion.count) bytes")
+            
+        } catch {
+            errorMessage = "Failed to sign message: \(error.localizedDescription)"
+        }
+        
+        isLoading = false
+    }
+    
+    func shareSignedRequest(_ result: AssertionResult) {
+        let exportDict: [String: String] = [
+            "keyId": result.keyId,
+            "message": result.message,
+            "messageBase64": result.messageData.base64EncodedString(),
+            "assertion": result.assertion.base64EncodedString(),
+            "timestamp": ISO8601DateFormatter().string(from: result.timestamp)
+        ]
+        
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: exportDict, options: .prettyPrinted) else { return }
+        
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("signed_request.json")
+        try? jsonData.write(to: tempURL)
+        
+        let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = windowScene.windows.first?.rootViewController {
+            rootVC.present(activityVC, animated: true)
+        }
+    }
+}
+
+// MARK: - Assertion Result
+
+struct AssertionResult {
+    let keyId: String
+    let message: String
+    let messageData: Data
+    let assertion: Data
+    let timestamp: Date
+    
+    var assertionBase64: String {
+        return assertion.base64EncodedString()
     }
 }
 
