@@ -4,8 +4,6 @@ import { useParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { ProofCard } from "@/components/ProofCard";
-import { Card } from "@/components/Card";
-import { Button } from "@/components/Button";
 import { getAttestations, type StoredAttestation } from "@/lib/attestations";
 import { formatPassportId } from "@/lib/identity";
 import Link from "next/link";
@@ -101,36 +99,16 @@ export default function ProfilePage() {
         </div>
 
         {/* Proof cards */}
-        {!loaded ? null : attestations.length > 0 ? (
-          filtered.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((att) => (
-                <ProofCard key={att.id} attestation={att} shareUrl={shareUrl} />
-              ))}
-            </div>
-          ) : (
-            <p className="py-8 text-center text-sm text-text-muted">No matching cards</p>
-          )
+        {!loaded ? null : filtered.length > 0 ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((att) => (
+              <ProofCard key={att.id} attestation={att} shareUrl={shareUrl} />
+            ))}
+          </div>
+        ) : attestations.length > 0 ? (
+          <p className="py-8 text-center text-sm text-text-muted">No matching cards</p>
         ) : (
-          <Card className="text-center">
-            <div className="py-6">
-              <div
-                className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg"
-                style={{ background: 'linear-gradient(135deg, var(--gradient-brand-from), var(--gradient-brand-to))' }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
-              <h3 className="mb-1 text-sm font-bold text-text">No proofs yet</h3>
-              <p className="mb-3 text-xs text-text-muted">
-                Start building your on-chain identity by verifying credentials from your favorite platforms.
-              </p>
-              <Link href="/attest">
-                <Button variant="accent">Start verification</Button>
-              </Link>
-            </div>
-          </Card>
+          <p className="py-8 text-center text-sm text-text-muted">No ZK cards yet. <Link href="/attest" className="text-primary hover:underline">Start verification</Link></p>
         )}
       </main>
     </div>
