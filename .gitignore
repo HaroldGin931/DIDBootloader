@@ -17,5 +17,6 @@ DerivedData/
 # macOS
 .DS_Store
 
-# test_data
-scripts/test_data
+# VC
+.prompts/
+CLAUDE.md
