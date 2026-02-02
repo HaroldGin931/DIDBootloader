@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useAccount } from "wagmi";
 import { Header } from "@/components/Header";
-import { Button } from "@/components/Button";
 import { ProofCard } from "@/components/ProofCard";
 import { saveAttestation, parseAttestationData, type StoredAttestation } from "@/lib/attestations";
 import { TEMPLATES, type Template } from "@/lib/templates";
@@ -221,24 +220,8 @@ export default function AttestPage() {
             {/* Error */}
             {step === "error" && (
               <div className="flex flex-col items-center gap-4 py-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-error-muted">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-error">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M15 9l-6 6M9 9l6 6" />
-                  </svg>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-text">Attestation failed</p>
-                  <p className="mt-1 text-xs text-text-muted">{error}</p>
-                </div>
-                <div className="flex w-full gap-2">
-                  <Button variant="secondary" onClick={closeModal} className="flex-1">
-                    Close
-                  </Button>
-                  <Button variant="accent" onClick={() => startAttestation()} className="flex-1">
-                    Retry
-                  </Button>
-                </div>
+                <p className="text-sm font-medium text-text">Attestation failed</p>
+                <p className="text-xs text-text-muted">{error}</p>
               </div>
             )}
 
