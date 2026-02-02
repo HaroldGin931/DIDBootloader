@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
 
     // Store device
     const publicKeyDerB64 = pubKeyDer.toString("base64");
-    saveDevice({ keyId, publicKeyDer: publicKeyDerB64, counter: 0 });
+    await saveDevice({ keyId, publicKeyDer: publicKeyDerB64, counter: 0 });
 
     return NextResponse.json({ success: true, publicKey: publicKeyDerB64 });
   } catch (e: unknown) {

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const device = getDevice(keyId);
+    const device = await getDevice(keyId);
     if (!device) {
       return NextResponse.json({ success: false, error: "Device not found" }, { status: 404 });
     }
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Update device record
-    updateDevice(keyId, { counter, evmAddress, passportHash });
+    await updateDevice(keyId, { counter, evmAddress, passportHash });
 
     return NextResponse.json({ success: true, evmAddress, passportHash });
   } catch (e: unknown) {

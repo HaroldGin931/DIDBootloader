@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, error: "address is required" }, { status: 400 });
   }
 
-  const device = findDeviceByAddress(address);
+  const device = await findDeviceByAddress(address);
   return NextResponse.json({
     success: true,
     passportHash: device?.passportHash ?? null,
